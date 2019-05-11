@@ -52,7 +52,7 @@ class ArticleController extends Controller {
             return Promise.reject('error: 没有找到该文章的详情');
         }
         // 要判断该登录用户是否是该类型的创建用户
-        if(articleDetail.create_user != user._id) {
+        if(articleDetail.create_user._id != user._id) {
             return Promise.reject('error: 登录用户不是该类型的创建者，没有权限修改');
         }
         const updatedArticleDetail = await this.ctx.service.articleService.update(article_id);
@@ -75,7 +75,7 @@ class ArticleController extends Controller {
         if(!articleDetail) {
             return Promise.reject('error: 没有找到该文章的详情');
         }
-        if(articleDetail.create_user != user._id) {
+        if(articleDetail.create_user._id != user._id) {
             return Promise.reject('error: 登录用户不是该文章的创建者，没有权限删除');
         }
         const deletedArticle = await this.ctx.service.articleService.delete(article_id);

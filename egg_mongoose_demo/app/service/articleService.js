@@ -2,6 +2,7 @@
 
 const Service = require('egg').Service;
 const ObjectId = require('mongoose').Types.ObjectId;
+const uvHelper = require('../middleware/uvHelper');
 
 class ArticleService extends Service {
     async create(user, catelog_id) {
@@ -124,7 +125,33 @@ class ArticleService extends Service {
         };
         let res;
         try {
-            res = await this.ctx.model.ArticleModel.findOne(where);
+            res = await this.ctx.model.ArticleModel.findOne(where)
+            .populate({
+                path: 'create_user',
+                select: {
+                    username: 1,
+                    email: 1
+                }
+            })
+            .populate({
+                path: 'catelog',
+                select: {
+                    title: 1,
+                    description: 1
+                } 
+            });
+            if(!res) {
+                return Promise.reject('error: 没有找到该文章');
+            }
+            /**
+             * 获取某篇文章详情，实际是点击进去，增加一个浏览量，后面使用缓存存储，
+             * 在使用定时器定期更新至持久层数据库，避免频繁操作数据库造成太大压力
+             */
+            const options = {$inc: {"meta.view_count": 1}};
+            const increRes = await this.ctx.model.ArticleModel.update(where, options)
+            console.log('浏览量加一', increRes);
+
+            uvHelper.updateUv('article', res._id, this.ctx.session.userInfo._id);
         } catch(err) {
             console.error(err);
         }
@@ -135,11 +162,26 @@ class ArticleService extends Service {
     async getAllArticlesDetail() {
         const where = {};
         const options = {
-            "create_time": 1
+            "create_time": -1
         };
         let res;
         try {
-            res = await this.ctx.model.ArticleModel.find(where).sort(options);
+            res = await this.ctx.model.ArticleModel.find(where)
+            .populate({
+                path: 'create_user',
+                select: {
+                    username: 1,
+                    email: 1
+                } 
+            })
+            .populate({
+                path: 'catelog',
+                select: {
+                    title: 1,
+                    description: 1
+                } 
+            })
+            .sort(options);
         } catch(err) {
             console.error(err);
         }

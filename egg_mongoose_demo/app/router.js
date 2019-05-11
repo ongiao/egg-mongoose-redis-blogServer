@@ -26,5 +26,6 @@ module.exports = app => {
   router.post('/catelog/delete', controller.catelogController.delete);
   router.get('/catelog/getCatelogDetail', controller.catelogController.getCatelogDetail);
   router.get('/catelog/getAllCatelogsDetail', controller.catelogController.getAllCatelogsDetail);
+  router.get('/catelog/getCatelogArticles', controller.catelogController.getCatelogArticles);
 
 };

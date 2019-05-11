@@ -12,6 +12,7 @@ counterSchema.index({ _id: 1, seq: 1 }, { unique: true });
 const counterModel = mongoose.model('counter', counterSchema);
 
 module.exports =  {
+    // 加密
     encrypt: (data, key) => {
         const cipher = crypto.createCipher('aes192', key);
         var crypted = cipher.update(data, 'utf8', 'hex');
@@ -19,6 +20,7 @@ module.exports =  {
         return crypted;
     },
 
+    // 解密
     decrypt: (encrypted, key) => {
         const decipher = crypto.createDecipher('aes192', key);
         var decrypted = decipher.update(encrypted, 'hex', 'utf8');
@@ -39,6 +41,14 @@ module.exports =  {
                 next();
             }
         );                                     // ** Method call ends **
-    }
+    },
 
+    // 定时器，作定时任务
+    timeOutTask: (fn, argss, timeout) => {
+        var func = fn;
+        var args = argss;
+        setTimeout(async () => {
+            return await func(args);
+        }, timeout);
+    }
 }

@@ -42,7 +42,7 @@ class CatelogController extends Controller {
             return Promise.reject('error: 没有找到该类别的详情');
         }
         // 要判断该登录用户是否是该类型的创建用户
-        if(catelotDetail.create_user != user._id) {
+        if(catelotDetail.create_user._id != user._id) {
             return Promise.reject('error: 登录用户不是该类型的创建者，没有权限修改');
         }
         const updatedCatelogDetail = await this.ctx.service.catelogService.update(catelog_id);
@@ -66,7 +66,8 @@ class CatelogController extends Controller {
             return Promise.reject('error: 没有找到该类别的详情');
         }
         // 要判断该登录用户是否是该类型的创建用户
-        if(catelotDetail.create_user != user._id) {
+        console.log(catelotDetail.create_user, user._id);
+        if(catelotDetail.create_user._id != user._id) {
             return Promise.reject('error: 登录用户不是该类型的创建者，没有权限删除');
         }
         const deletedCatelogDetail = await this.ctx.service.catelogService.delete(catelog_id);
@@ -100,6 +101,22 @@ class CatelogController extends Controller {
         }
         this.ctx.body = allCatelogsDetail;
         this.ctx.apiResult = { data: allCatelogsDetail };
+    }
+
+    async getCatelogArticles() {
+        // 通过params 获取到类型id
+        const catelog_id = this.ctx.query.catelog_id;
+        console.log('在getCatelogArticles中', catelog_id);
+        if(!catelog_id) {
+            return Promise.reject('error: 类型id为空');
+        }
+        let catelogArticles = await this.ctx.service.catelogService.getCatelogArticles(catelog_id);
+        console.log('在getCatelogArticles控制器中', catelogArticles);
+        if(!catelogArticles || catelogArticles.length === 0) {
+            return Promise.reject('error: 该类别下暂无文章');
+        }
+        this.ctx.body = catelogArticles;
+        this.ctx.apiResult = { data: catelogArticles };
     }
 }
 

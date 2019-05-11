@@ -49,7 +49,30 @@ class CatelogService extends Service {
         };
         let res;
         try {
+            // 同时删除类别下拥有的文章id
+            // 首先获取类别下的文章id，组成一个数组，遍历数组删除
+            const catelog = await this.getCatelogDetail(catelog_id);
+            for(let index = 0; index < catelog.ownsArticle_ids.length; index++) {
+                await this.deleteArticleFromCatelog(catelog_id, catelog.ownsArticle_ids[index]._id);
+            }
             res = await this.ctx.model.CatelogModel.update(where, options);
+            // 删除类别之后同时要将此类别下的所有文章的状态置为-1
+            const deleteArticleRes = await this.ctx.model.ArticleModel.update(
+                {
+                    "catelog": catelog_id,
+                    "status" : 1
+                },
+                {
+                    "status": -1,
+                    
+                    "delete_time": new Date().toISOString()
+                },
+                {multi: true}
+            );
+            // const deleteArtId = await this.deleteArticleFromCatelog();
+            if(!res || !deleteArticleRes) {
+                return Promise.reject('error: 类别删除出错');
+            }
             console.log('类别删除成功', res);
         } catch(err) {
             console.error(err);
@@ -66,7 +89,21 @@ class CatelogService extends Service {
         };
         let res;
         try {
-            res = await this.ctx.model.CatelogModel.findOne(where);
+            res = await this.ctx.model.CatelogModel.findOne(where)
+            .populate({
+                path: 'create_user',
+                select: {
+                    username: 1,
+                    email: 1
+                }
+            })
+            .populate({
+                path: 'ownsArticle_ids',
+                select: {
+                    title: 1,
+                    content: 1
+                }
+            });
         } catch(err) {
             console.error(err);
         }
@@ -81,7 +118,15 @@ class CatelogService extends Service {
         };
         let res;
         try {
-            res = await this.ctx.model.CatelogModel.find(where).sort(options);
+            res = await this.ctx.model.CatelogModel.find(where)
+            .populate({
+                path: 'create_user',
+                select: {
+                    username: 1,
+                    email: 1
+                }
+            })
+            .sort(options);
         } catch(err) {
             console.error(err);
         }
@@ -112,6 +157,33 @@ class CatelogService extends Service {
             }
             catelog.save();
         });
+    }
+
+    async getCatelogArticles(catelog_id) {
+        if(!catelog_id) {
+            return Promise.reject('error: 缺少必要参数catelog_id');
+        }
+        const where = {
+            "status": 1,
+            "catelog": catelog_id
+        };
+        const options = {};
+        let res;
+        try{
+            res = await this.ctx.model.ArticleModel.find(where)
+                .populate({
+                    path: 'catelog',
+                    select: {title: 1}
+                })
+                .sort({create_time: -1});
+        } catch(err) {
+            console.error(err);
+        }
+        if(!res || res.length === 0) {
+            return Promise.reject('error: 该类别下暂无文章');
+        }
+        console.log('在getCatelogArticles服务中', res);
+        return res;
     }
 }
 
