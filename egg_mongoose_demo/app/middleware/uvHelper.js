@@ -9,7 +9,6 @@ module.exports = app => {
     getUVsFromDB
 };
 
-
 async function updateUv(sourceType, objectId, userObjectId) {
     const keyName = `${cacheKey.uv.keyName}:${sourceType}-${objectId}`;
     const expire = cacheKey.uv.expire;

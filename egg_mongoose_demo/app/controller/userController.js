@@ -17,6 +17,7 @@ class UserController extends Controller {
             if(!error) {
                 const result = await this.ctx.service.userService.signup();
                 console.log('注册成功', result);
+                
                 if(result) {
                     this.ctx.redirect('/');
                 }
@@ -60,5 +61,18 @@ class UserController extends Controller {
     //     // 只允许注销自己的账户
     //     let res = await this.ctx.service.userService.cancelAccount();
     // }
+
+    async getUserDetail() {
+        const user_id = this.ctx.query.user_id;
+        if(!user_id) {
+            return Promise.reject('error: 缺少必要参数user_id');
+        }
+        const userDetail = await this.ctx.service.userService.getUserDetail(user_id);
+        if(!userDetail) {
+            return Promise.reject('error: 没有找到该用户的详情');
+        }
+        this.ctx.body = userDetail;
+        this.ctx.apiResult = { data: userDetail };
+    }
 }
 module.exports = UserController;

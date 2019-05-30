@@ -50,5 +50,34 @@ module.exports =  {
         setTimeout(async () => {
             return await func(args);
         }, timeout);
+    },
+
+    // 点赞点踩反转
+    likeDislikeConvert: (entity, type, user) => {
+        console.log('在点赞点踩中间件中', entity);
+        if(type === 'like') {
+            const dislikeItem = entity.dislike_info.dislike_user;
+            if(dislikeItem != undefined) {
+                for(let index = 0; index < dislikeItem.length; index++) {
+                    // 如果有该用户，删除该用户并数量-1
+                    if(dislikeItem[index].toString() === user._id.toString()) {
+                        dislikeItem.splice(index, 1);
+                        entity.meta.dislike_count -= 1;
+                    }
+                }
+            }   
+        } else if(type === 'dislike') {
+            const likeItem = entity.like_info.like_user;
+            if(likeItem != undefined) {
+                for(let index = 0; index < likeItem.length; index++) {
+                    // 如果有该用户，删除该用户并数量-1
+                    if(likeItem[index].toString() === user._id.toString()) {
+                        likeItem.splice(index, 1);
+                        entity.meta.like_count -= 1;
+                    }
+                }
+            }
+            console.log(entity);
+        }
     }
 }

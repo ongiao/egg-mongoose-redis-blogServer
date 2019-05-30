@@ -42,12 +42,31 @@ module.exports = app => {
             type: Schema.Types.ObjectId,
             ref: 'Catelog'
         },
+        comment: {
+            type: [{type: Schema.Types.ObjectId, ref: 'Comment'}],
+            ref: 'Comment'
+        },
         // tags: {
         //     type: [{type: Schema.Types.ObjectId, ref: 'Tag'}]
         // },
+        like_info: {
+            like_user: {
+                type: [{type: Schema.Types.ObjectId, ref: 'User'}],
+                default: [],
+                ref: 'User'
+            }
+        },
+        dislike_info: {
+            dislike_user: {
+                type: [{type: Schema.Types.ObjectId, ref: 'User'}],
+                default: [],
+                ref: 'User'
+            }
+        },
         meta: {
             view_count: {type: Number, default: 0},
             like_count: {type: Number, default: 0},
+            dislike_count: {type: Number, default: 0},
             comment_count: {type: Number, default: 0}
         }
     });

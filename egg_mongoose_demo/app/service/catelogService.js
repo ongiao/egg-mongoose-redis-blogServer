@@ -6,9 +6,9 @@ const ObjectId = require('mongoose').Types.ObjectId;
 class CatelogService extends Service {
 
     async create(user) {
-        let body = this.ctx.request.body;
-        body.create_user = user._id;
-        const catelog = new this.ctx.model.CatelogModel(body);
+        const body          = this.ctx.request.body;
+        body.create_user    = user._id;
+        const catelog       = new this.ctx.model.CatelogModel(body);
         let res;
         try {
             res = await catelog.save();
@@ -69,7 +69,6 @@ class CatelogService extends Service {
                 },
                 {multi: true}
             );
-            // const deleteArtId = await this.deleteArticleFromCatelog();
             if(!res || !deleteArticleRes) {
                 return Promise.reject('error: 类别删除出错');
             }
@@ -82,7 +81,6 @@ class CatelogService extends Service {
 
     async getCatelogDetail(catelog_id) {
         const catelogId = new ObjectId(catelog_id);
-        // console.log(ObjectId.isValid(catelogId));
         const where = {
             "_id": catelogId,
             "status": 1

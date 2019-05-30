@@ -2,6 +2,7 @@
 
 const Controller = require('egg').Controller;
 const ObjectId = require('mongoose').Types.ObjectId;
+const elasticsearch = require('../service/elasticsearch');
 
 class ArticleController extends Controller {
 
@@ -10,6 +11,9 @@ class ArticleController extends Controller {
         const body = this.ctx.request.body;
         // 所属类别从params catelog_id中获取
         const catelog_id = this.ctx.query.catelog_id;
+        if(!catelog_id) {
+            return Promise.reject('error: 缺少参数catelog_id');
+        }
         // const catelogId = new ObjectId(catelog_id);
         const catelogDetail = await this.ctx.service.catelogService.getCatelogDetail(catelog_id);
         if(!catelogDetail) {
@@ -28,6 +32,7 @@ class ArticleController extends Controller {
             if(!error) {
                 const res = await this.ctx.service.articleService.create(user, catelog_id);
                 console.log('发布文章成功', res);
+                await this.articleES(res._id, 'create', res);
                 if(res) {
                     this.ctx.redirect('/');
                 }
@@ -56,6 +61,9 @@ class ArticleController extends Controller {
             return Promise.reject('error: 登录用户不是该类型的创建者，没有权限修改');
         }
         const updatedArticleDetail = await this.ctx.service.articleService.update(article_id);
+        const currentArticle = await this.ctx.service.articleService.getArticleDetail(article_id);
+        console.log('controller中',currentArticle);
+        await this.articleES(currentArticle._id, 'update', currentArticle);
         this.ctx.body = updatedArticleDetail;
         this.ctx.apiResult = { data: updatedArticleDetail };
     }
@@ -79,6 +87,7 @@ class ArticleController extends Controller {
             return Promise.reject('error: 登录用户不是该文章的创建者，没有权限删除');
         }
         const deletedArticle = await this.ctx.service.articleService.delete(article_id);
+        await this.articleES(article_id, 'delete');
         this.ctx.apiResult = { data: deletedArticle };
         if(deletedArticle) {
             this.ctx.redirect('/');
@@ -90,7 +99,7 @@ class ArticleController extends Controller {
         if(!article_id) {
             return Promise.reject('error: articleId为空');
         }
-        let articleDetail = await this.ctx.service.articleService.getArticleDetail(article_id);
+        let articleDetail = await this.ctx.service.articleService.getArticleDetail(article_id, 'GET');
         console.log('getArticleDetail控制器结果', articleDetail);
         if(!articleDetail) {
             return Promise.reject('error: 没有找到该文章的详情');
@@ -106,6 +115,27 @@ class ArticleController extends Controller {
         }
         this.ctx.body = allArticlesDetail;
         this.ctx.apiResult = { data: allArticlesDetail };
+    }
+
+    // 文章同步ElasticSearch
+    async articleES(id, action, article) {
+        console.log('在ES中');
+        id = id.toString();
+        if(action === 'delete') {
+            return elasticsearch.deleteES('blog', 'article', id);
+        }
+        const esBody = {
+            title: article.title,
+            content: article.content,
+            create_time: article.create_time,
+            update_time: article.update_time,
+            // create_user: article.create_user
+        };
+        if(action === 'create') {
+            return elasticsearch.createES('blog', 'article', id, esBody);
+        } else if(action === 'update') {
+            return elasticsearch.updateES('blog', 'article', id, esBody);
+        }
     }
 }
 

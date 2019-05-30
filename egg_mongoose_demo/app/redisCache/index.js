@@ -32,7 +32,8 @@ module.exports = {
     increKeyValueToCache,
     upsertSetToCache,
     scardFromCache,
-    saddToCache
+    saddToCache,
+    zaddToCache
 
 };
 
@@ -77,6 +78,18 @@ async function scardFromCache(keyName) {
 // 集合中添加元素
 async function saddToCache(keyName, content, expire) {
     return redis.sadd(keyName, content)
+    .then(() => {
+        if(expire) {
+            return redis.expire(keyName, expire);
+        } else {
+            return null;
+        }
+    });
+}
+
+// 向有序集合汇总添加元素
+async function zaddToCache(keyName, score, content, expire) {
+    return redis.zadd(keyName, [score, content])
     .then(() => {
         if(expire) {
             return redis.expire(keyName, expire);

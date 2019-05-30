@@ -31,6 +31,11 @@ module.exports = app => {
                 type: String,
                 unique: true
             },
+            // 文章收藏
+            collections: {
+                type: [{type: Schema.Types.ObjectId, ref: 'Article'}],
+                ref: 'Article'
+            },
             status: {
                 type: String,
                 enum: ['-1', '0', '1'],
@@ -40,6 +45,7 @@ module.exports = app => {
                 type: Date,
                 default: new Date()
             },
+            // 上次登录时间
             lastLoginTime: {
                 type: Date
             },
@@ -66,6 +72,7 @@ module.exports = app => {
             return password === decrypt(encryptedPassword, salt);
         }
     };
+    // 保存前创建自增id
     UserSchema.pre('save', function(next) {
         if(!this.isNew) {
             next();
