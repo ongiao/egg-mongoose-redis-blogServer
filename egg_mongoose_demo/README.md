@@ -1,4 +1,4 @@
-# egg_mongoose_demo
+# eggBlog
 
 
 
